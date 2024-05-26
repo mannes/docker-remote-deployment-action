@@ -1,13 +1,6 @@
 #!/bin/sh
 set -eu
 
-execute_ssh(){
-  echo "Execute Over SSH: $@"
-  ssh -q -t -i "$HOME/.ssh/id_rsa" \
-      -o UserKnownHostsFile=/dev/null \
-      -o StrictHostKeyChecking=no "$INPUT_REMOTE_DOCKER_HOST" -p "$INPUT_SSH_PORT" "$@"
-}
-
 if [ -z "$INPUT_REMOTE_DOCKER_HOST" ]; then
     echo "Input remote_docker_host is required!"
     exit 1
@@ -37,12 +30,10 @@ if [ -z "$INPUT_SSH_PORT" ]; then
 fi
 
 STACK_FILE=${INPUT_STACK_FILE_NAME}
-DEPLOYMENT_COMMAND_OPTIONS=""
 
 DEPLOYMENT_COMMAND="docker compose -f $STACK_FILE"
 
 SSH_HOST=${INPUT_REMOTE_DOCKER_HOST#*@}
-#DOCKER_HOST="ssh://$INPUT_REMOTE_DOCKER_HOST:$INPUT_SSH_PORT"
 
 echo "Registering SSH keys..."
 # register the private key with the agent.
@@ -55,7 +46,7 @@ ssh-add ~/.ssh/id_rsa
 
 
 echo "Add known hosts"
-printf '%s\n' "$INPUT_SSH_PUBLIC_KEY" > ~/.ssh/id_rsa
+printf '%s\n' "$INPUT_SSH_PUBLIC_KEY" > ~/.ssh/known_hosts
 printf '%s\n' "$INPUT_SSH_PUBLIC_KEY" > /etc/ssh/ssh_known_hosts
 # set context
 echo "Create docker context"
